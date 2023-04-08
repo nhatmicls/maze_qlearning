@@ -1,0 +1,25 @@
+from typing import *
+
+map_array = [
+    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "XS        XXXXXXXXXX X    XXX   XX",
+    "XX XXX XX           X  XXX XX XXXX",
+    "X   XXXXX XXXX XXX XXX   X XX   XX",
+    "XX XXXX   XX   XXX     XXX XXXX XX",
+    "XX    X XXXXXX     XXX XXX XXXX XX",
+    "XX XXXX    XXX X XX  X          XX",
+    "X  X  XXXXX XX X  XX   XXXXX XXXXX",
+    "XXXXX     X X   X XXXXX X XX XXXXX",
+    "X     XXX     XXXXXXXXX         XX",
+    "XXX XXXXXXX XXXXX     XXX XXXXXXXX",
+    "XXX XXX XXXXXXXX XXXX XXX XXFXXXXX",
+    "X   XXX        X XXXX X   XX     X",
+    "X XXXXX XXXXXX        X XXXX XXX X",
+    "X    XX X XXXX XXXXXX XXXXXX XX  X",
+    "X X XX       X XX XX         X  XX",
+    "X  XXX X XX XX    X X XXXXXX XXXXX",
+    "XX X XXX X XXXXX XX X   XX X  XXXX",
+    "X  X X              XXXXXXXXX XXXX",
+    "XX     XXXXXXX X XX     XXXXX    X",
+    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+]
