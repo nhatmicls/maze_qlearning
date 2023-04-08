@@ -36,6 +36,8 @@ class botSolveMaze:
         self.last_episode = 0
         self.history_change: List[List[int]] = []
 
+        self.debug = True
+
         # self.export_model("./test.json")
 
     def recalculate_reward(
@@ -207,16 +209,16 @@ class botSolveMaze:
 
             self.last_episode = episode
 
-            # os.system("clear")
-            if True:
-                # self.env.render()
-                print("Episode: " + str(episode) + "/" + str(episodes))
-                print("Step: " + str(self.env.step) + "/" + str(self.env.step_limit))
-                print("Epsilon: " + str(epsilon) + "/" + str(start_epsilon))
-                stop_time = time.time()
-                duration = stop_time - start_time
-                print("Time taken: " + str(duration) + " s")
-                # for _ in range(self.DISCRETE_OS_SIZE[0]):
-                #     print(self.own_reward[_])
+            print("Episode: " + str(episode) + "/" + str(episodes))
+            print("Step: " + str(self.env.step) + "/" + str(self.env.step_limit))
+            print("Epsilon: " + str(epsilon) + "/" + str(start_epsilon))
+            stop_time = time.time()
+            duration = stop_time - start_time
+            print("Time taken: " + str(duration) + " s")
+            if self.debug == True:
+                os.system("clear")
+                self.env.render()
+                for _ in range(self.DISCRETE_OS_SIZE[0]):
+                    print(self.own_reward[_])
 
         self.export_model("./q_table.json")
