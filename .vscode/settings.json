@@ -1,5 +1,6 @@
 {
     "python.analysis.extraPaths": [
-        "./src/evniroment"
+        "./src/evniroment",
+        "./src/bot"
     ]
 }

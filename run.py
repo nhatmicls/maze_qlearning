@@ -16,7 +16,7 @@ from bot import botSolveMaze
 def main():
     env = Maze(map_array=map_array)
     op = botSolveMaze(env=env)
-    op.run(episodes=2500)
+    op.run()
 
 
 if __name__ == "__main__":

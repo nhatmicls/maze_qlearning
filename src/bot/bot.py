@@ -17,7 +17,7 @@ class botSolveMaze:
         self.env = env
         self.DISCRETE_OS_SIZE = self.env.get_maze_size()
         self.q_table = np.random.uniform(
-            low=-2, high=0, size=(self.DISCRETE_OS_SIZE + [env.total_action])
+            low=0, high=0, size=(self.DISCRETE_OS_SIZE + [env.total_action])
         )
 
         self.own_reward: List[List[int]] = []
@@ -26,19 +26,21 @@ class botSolveMaze:
 
         self.own_reward[self.env.get_destination_location()[0]][
             self.env.get_destination_location()[1]
-        ] = 1
+        ] = self.env.max_reward
 
         self.self_update_q_table = True
         self.self_update = True
 
-        self.lowest_reward = 1
+        self.lowest_reward = self.env.max_reward
         self.stack_no_new_value = 0
         self.last_episode = 0
         self.history_change: List[List[int]] = []
 
         self.debug = True
+        self.last_step_number = self.env.step_limit
 
-        # self.export_model("./test.json")
+        # self.export_model("./q_table.json")
+        # self.import_model("./q_table.json")
 
     def recalculate_reward(
         self, old_coordination: List[int], new_coordination: List[int]
@@ -46,13 +48,18 @@ class botSolveMaze:
         new_point_reward = self.own_reward[new_coordination[0]][new_coordination[1]]
         old_point_reward = self.own_reward[old_coordination[0]][old_coordination[1]]
 
-        if new_point_reward >= old_point_reward:
+        if old_coordination == new_coordination:
+            return -10
+
+        if new_point_reward > old_point_reward:
             return self.own_reward[new_coordination[0]][new_coordination[1]]
+        elif new_point_reward == old_point_reward == 0:
+            return 0
         else:
-            return -1
+            return -10
 
     def update_reward(
-        self, old_coordination: List[int], new_coordination: List[int], episode: int
+        self, old_coordination: List[int], new_coordination: List[int]
     ) -> None:
         if self.self_update == False:
             return
@@ -62,14 +69,25 @@ class botSolveMaze:
         drop_reward_per_step = 1 / 100
 
         if old_coordination == self.env.get_start_location() and new_point_reward != 0:
-            self.self_update = False
             if self.self_update_q_table == True:
+                print("Stop update reward")
+                time.sleep(5)
+
+                for y in range(self.DISCRETE_OS_SIZE[0]):
+                    for x in range(self.DISCRETE_OS_SIZE[1]):
+                        if self.own_reward[y][x] == 0:
+                            self.own_reward[y][x] = -2
+
                 self.q_table = np.random.uniform(
-                    low=-2,
+                    low=0,
                     high=0,
                     size=(self.DISCRETE_OS_SIZE + [self.env.total_action]),
                 )
+
                 self.self_update_q_table = False
+                self.self_update = False
+
+                self.env.reset()
             return
 
         if new_point_reward > 0:
@@ -80,41 +98,31 @@ class botSolveMaze:
                     len(self.env.get_all_valid_action()) <= 1
                     and new_coordination != self.env.get_destination_location()
                 ):
-                    if old_coordination != self.env.get_start_location():
-                        self.own_reward[new_coordination[0]][new_coordination[1]] = -1
-
-                    self.stack_no_new_value += 1
                     return
 
-                if new_reward > 0 and new_reward < self.lowest_reward:
+                if new_reward > 0:
                     self.own_reward[old_coordination[0]][old_coordination[1]] = round(
                         new_reward, 3
                     )
                     self.stack_no_new_value = 0
                     self.lowest_reward = new_reward
                     self.history_change.append(old_coordination)
-                else:
-                    self.stack_no_new_value += 1
         else:
             if old_point_reward == 0:
                 self.own_reward[new_coordination[0]][new_coordination[1]] = 0
-                self.stack_no_new_value = 0
-
-        if self.stack_no_new_value > 1 and self.last_episode < episode:
-            self.stack_no_new_value = 0
-
-            self.lowest_reward += drop_reward_per_step
-            self.last_episode = episode
-
-            last_change_location = self.history_change[len(self.history_change) - 1]
-            self.own_reward[last_change_location[0]][last_change_location[1]] = -1
-            self.history_change.pop()
 
     def import_model(self, direct_path: str) -> None:
         with open(direct_path) as json_file:
             data = json.load(json_file)
 
         json_file.close()
+
+        for y in range(self.q_table.shape[0] - 1):
+            y_value: np.ndarray = self.q_table[y]
+            for x in range(y_value.shape[0] - 1):
+                x_value: np.ndarray = y_value[x]
+                for z in range(x_value.size):
+                    self.q_table[tuple([y, x])][z] = data[str(y)][str(x)][z]
 
     def export_model(self, direct_path: str) -> None:
         data = {}
@@ -129,7 +137,7 @@ class botSolveMaze:
 
                 x_value: np.ndarray = y_value[x]
 
-                for z in range(x_value.size - 1):
+                for z in range(x_value.size):
                     action_point[str(x)].append(x_value[z])
                 action_point_y.update(action_point)
             data.update({str(y): action_point_y})
@@ -139,10 +147,12 @@ class botSolveMaze:
 
         f.close()
 
-    def run(
+        print("Export complete")
+
+    def train(
         self,
         learning_rate: int = 0.9,
-        discount: int = 0.95,
+        discount: int = 0.5,
         episodes: int = 100,
         start_epsilon: int = 0.5,
     ) -> None:
@@ -152,6 +162,10 @@ class botSolveMaze:
         epsilon = start_epsilon
         epsilon_decay_value = epsilon / (END_EPSILON_DECAYING - START_EPSILON_DECAYING)
 
+        time_game_over = 0
+        count_after_finish = 0
+        step_loop_time = 0
+
         # print(np.argmax(q_table[(1, 1)]))
         # print((q_table[(1, 1)]))
         for episode in range(1, episodes + 1, 1):
@@ -160,23 +174,19 @@ class botSolveMaze:
             start_time = time.time()
             state = self.env.current_location
             done = False
+            game_over = False
 
-            while not done:
+            while not (done or game_over):
                 if np.random.rand() < epsilon:
                     action = random.choice(self.env.get_all_valid_action())
                 else:
                     action = np.argmax(self.q_table[tuple(state)])
 
-                new_state, reward, done, _ = self.env.action(action)
-
-                if action == self.env.no_move:
-                    reward = -1
+                new_state, reward, done, game_over = self.env.action(action)
 
                 # Generate reward
 
-                self.update_reward(
-                    old_coordination=state, new_coordination=new_state, episode=episode
-                )
+                self.update_reward(old_coordination=state, new_coordination=new_state)
                 reward = self.recalculate_reward(
                     old_coordination=state, new_coordination=new_state
                 )
@@ -192,33 +202,70 @@ class botSolveMaze:
                         reward + discount * max_future_q
                     )
 
-                    self.q_table[tuple(new_state) + (action,)] = new_q
+                    self.q_table[tuple(state) + (action,)] = new_q
 
                 elif new_state == self.env.get_destination_location():
-                    self.q_table[tuple(new_state) + (action,)] = 1
+                    self.q_table[tuple(state) + (action,)] = 2
 
-                state = new_state
                 # print(action, state)
 
-                if episode > episodes - 1:
-                    time.sleep(0.01)
-                    self.env.render()
+                # Post calculate
+                if done:
+                    time_game_over = 0
+                if game_over:
+                    time_game_over += 1
 
-            if END_EPSILON_DECAYING >= episode >= START_EPSILON_DECAYING:
+                state = new_state
+
+            if END_EPSILON_DECAYING >= episode >= START_EPSILON_DECAYING and done:
                 epsilon -= epsilon_decay_value
 
-            self.last_episode = episode
+            if self.debug == True:
+                # self.env.render()
+                print("Episode: " + str(episode) + "/" + str(episodes))
+                print("Step: " + str(self.env.step) + "/" + str(self.env.step_limit))
+                print("Epsilon: " + str(epsilon) + "/" + str(start_epsilon))
+                print("Non complete times: " + str(time_game_over))
+                stop_time = time.time()
+                duration = stop_time - start_time
+                print("Time taken: " + str(duration) + " s")
 
-            print("Episode: " + str(episode) + "/" + str(episodes))
+            if time_game_over > 10:
+                break
+
+            if self.last_step_number == self.env.step:
+                step_loop_time += 1
+                if step_loop_time > 10:
+                    break
+
+        self.export_model("./q_table.json")
+
+    def run(self):
+        self.import_model("./q_table.json")
+        self.env.reset()
+
+        start_time = time.time()
+        state = self.env.current_location
+        done = False
+        game_over = False
+
+        while not (done or game_over):
+            action = np.argmax(self.q_table[tuple(state)])
+
+            new_state, reward, done, game_over = self.env.action(action)
+
+            state = new_state
+
+            self.env.render()
             print("Step: " + str(self.env.step) + "/" + str(self.env.step_limit))
-            print("Epsilon: " + str(epsilon) + "/" + str(start_epsilon))
+            print("Action: " + str(action))
+            print("Max q: " + str(self.q_table[tuple(state) + (action,)]))
+
+            time.sleep(0.5)
+
+        if self.debug == True:
+            # self.env.render()
             stop_time = time.time()
             duration = stop_time - start_time
             print("Time taken: " + str(duration) + " s")
-            if self.debug == True:
-                os.system("clear")
-                self.env.render()
-                for _ in range(self.DISCRETE_OS_SIZE[0]):
-                    print(self.own_reward[_])
-
-        self.export_model("./q_table.json")
+            print("Step: " + str(self.env.step) + "/" + str(self.env.step_limit))

@@ -45,6 +45,8 @@ class Maze(Maze_object_define, Maze_moveable_direct_define):
         self.step = 0
         self.step_limit = 500000
 
+        self.max_reward = 2
+
         self.map_generate()
 
     def map_show_case(self):
@@ -126,19 +128,16 @@ class Maze(Maze_object_define, Maze_moveable_direct_define):
         done = False
 
         if self.valid_action(self.get_next_coordination(move)) == True:
-            self.current_location = self.get_next_coordination(move).copy()
+            self.current_location = self.get_next_coordination(move)
             self.step += 1
             done = self.is_done()
-            reward = 1 if done else 0
+            reward = self.max_reward if done else 0
         else:
             reward = -2
 
-        score = 1 if done else 0
+        game_over = self.is_game_over()
 
-        if self.step > self.step_limit:
-            done = True
-
-        return self.current_location, reward, done, score
+        return self.current_location, reward, done, game_over
 
     def render(self) -> None:
         os.system("clear")
@@ -165,8 +164,11 @@ class Maze(Maze_object_define, Maze_moveable_direct_define):
     def get_destination_location(self) -> List[int]:
         return self.destination_location
 
-    def game_over(self):
-        pass
+    def is_game_over(self) -> bool:
+        if self.step > self.step_limit:
+            return True
+        else:
+            return False
 
     def is_done(self) -> bool:
         if self.current_location == self.destination_location:
