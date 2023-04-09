@@ -78,11 +78,11 @@ class botSolveMaze:
                         if self.own_reward[y][x] == 0:
                             self.own_reward[y][x] = -2
 
-                self.q_table = np.random.uniform(
-                    low=0,
-                    high=0,
-                    size=(self.DISCRETE_OS_SIZE + [self.env.total_action]),
-                )
+                # self.q_table = np.random.uniform(
+                #     low=0,
+                #     high=0,
+                #     size=(self.DISCRETE_OS_SIZE + [self.env.total_action]),
+                # )
 
                 self.self_update_q_table = False
                 self.self_update = False
@@ -238,6 +238,9 @@ class botSolveMaze:
                 if step_loop_time > 10:
                     break
 
+            if self.last_step_number > self.env.step:
+                self.last_step_number = self.env.step
+
         self.export_model("./q_table.json")
 
     def run(self):
@@ -261,7 +264,7 @@ class botSolveMaze:
             print("Action: " + str(action))
             print("Max q: " + str(self.q_table[tuple(state) + (action,)]))
 
-            time.sleep(0.5)
+            time.sleep(0.1)
 
         if self.debug == True:
             # self.env.render()

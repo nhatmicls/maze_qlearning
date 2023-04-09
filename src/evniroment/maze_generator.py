@@ -173,7 +173,7 @@ class Maze(Maze_object_define, Maze_moveable_direct_define):
     def is_done(self) -> bool:
         if self.current_location == self.destination_location:
             time.sleep(1)
-            print("You are fucking done")
+            print("You found a destination")
             return True
         else:
             return False
