@@ -29,7 +29,7 @@ class Maze_moveable_direct_define:
 
 
 class Maze(Maze_object_define, Maze_moveable_direct_define):
-    def __init__(self, map_array: List[str]) -> None:
+    def __init__(self, map_array: List[str], max_step: int = 500000) -> None:
         Maze_object_define.__init__(self)
         Maze_moveable_direct_define.__init__(self)
 
@@ -43,11 +43,16 @@ class Maze(Maze_object_define, Maze_moveable_direct_define):
         self.maze_size = [0, 0]
 
         self.step = 0
-        self.step_limit = 500000
+        self.step_limit = max_step
 
         self.max_reward = 2
 
         self.map_generate()
+
+        # Show static
+        print("Maze site: " + str(self.maze_size[1]) + "," + str(self.maze_size[0]))
+        print("Max point: " + str(self.max_reward))
+        time.sleep(3)
 
     def map_show_case(self):
         print(self.current_location)
@@ -61,6 +66,9 @@ class Maze(Maze_object_define, Maze_moveable_direct_define):
         site_map = len(self.map_data[0])
 
         self.maze_size = [len(self.map_data), len(self.map_data[0])]
+
+        self.max_reward = self.maze_size[0] * self.maze_size[1] // 300
+        self.max_penalty = self.max_reward * 2
 
         for _ in range(len(self.map_data)):
             self.map_block_array.append([[0, 0, 0, 0, 0]] * site_map)

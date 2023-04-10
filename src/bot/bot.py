@@ -45,18 +45,20 @@ class botSolveMaze:
     def recalculate_reward(
         self, old_coordination: List[int], new_coordination: List[int]
     ) -> float:
+        max_penetrade = self.env.max_penalty * 5
+
         new_point_reward = self.own_reward[new_coordination[0]][new_coordination[1]]
         old_point_reward = self.own_reward[old_coordination[0]][old_coordination[1]]
 
         if old_coordination == new_coordination:
-            return -10
+            return -max_penetrade
 
         if new_point_reward > old_point_reward:
             return self.own_reward[new_coordination[0]][new_coordination[1]]
         elif new_point_reward == old_point_reward == 0:
             return 0
         else:
-            return -10
+            return -max_penetrade
 
     def update_reward(
         self, old_coordination: List[int], new_coordination: List[int]
@@ -126,6 +128,11 @@ class botSolveMaze:
 
     def export_model(self, direct_path: str) -> None:
         data = {}
+
+        with open(direct_path, "w+", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+
+        f.close()
 
         for y in range(self.q_table.shape[0] - 1):
             action_point_y = {}
@@ -205,7 +212,7 @@ class botSolveMaze:
                     self.q_table[tuple(state) + (action,)] = new_q
 
                 elif new_state == self.env.get_destination_location():
-                    self.q_table[tuple(state) + (action,)] = 2
+                    self.q_table[tuple(state) + (action,)] = self.env.max_reward
 
                 # print(action, state)
 
