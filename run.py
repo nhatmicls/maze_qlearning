@@ -9,12 +9,12 @@ sys.path.append(parent_dir_path + "/src/evniroment")
 sys.path.append(parent_dir_path + "/src/bot")
 
 from maze_generator import Maze
-from maze_define import map_array, map_array_1
+from maze_define import *
 from bot import botSolveMaze
 
 
 def main():
-    env = Maze(map_array=map_array)
+    env = Maze(map_array=map_array_1)
     op = botSolveMaze(env=env)
     op.run()
 
