@@ -68,6 +68,10 @@ class Maze(Maze_object_define, Maze_moveable_direct_define):
         self.maze_size = [len(self.map_data), len(self.map_data[0])]
 
         self.max_reward = self.maze_size[0] * self.maze_size[1] // 300
+
+        if self.max_reward == 0:
+            self.max_reward = 1
+
         self.max_penalty = self.max_reward * 2
 
         for _ in range(len(self.map_data)):

@@ -14,7 +14,7 @@ from bot import botSolveMaze
 
 
 def main():
-    env = Maze(map_array=map_array_1)
+    env = Maze(map_array=map_array_4)
     op = botSolveMaze(env=env)
     op.run()
 
